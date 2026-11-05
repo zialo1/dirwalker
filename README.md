@@ -9,6 +9,8 @@ The current application version is **0.25.2**. Commands run from the repository
 directory using `dirwalker.py`; `version25.py` is the corresponding release source.
 On a deployed server, the entry point may be named `serverfiles.py`.
 
+The tool is under development. It is not stable.
+
 ## Requirements
 
 - Python 3.8, as specified in `.python-version` and `pyproject.toml`.
