@@ -1,0 +1,17 @@
+Bereitstellung auf dem Server (Version 0.25.0)
+
+Die Ziele und Pfade werden über REMOTE und REMOTEDIR im Makefile gesteuert.
+Vor dem Übertragen die laufenden Worker geordnet stoppen und nötige
+Schema-Migrationen separat anwenden.
+
+  make test-dryrun
+  make install REMOTE=synol REMOTEDIR=prog/serverfiles
+
+make install führt die Offline-Freigabeprüfungen aus, stellt die Produktionsmodule
+zusammen und überträgt sie mit rsync. Es erstellt serverfiles.py auf dem Server
+und aktualisiert den lokalen Einstieg dirwalker.py. Die Konfigurationsdatei wird
+aus ENV_FILE erzeugt; standardmäßig ./.secrets/shellenv. DB_HOST wird in der
+Serverkopie auf localhost gesetzt.
+
+Nach dem Übertragen check ausführen und die Server neu starten; laufende
+Python-Prozesse laden geänderte Dateien nicht automatisch nach.

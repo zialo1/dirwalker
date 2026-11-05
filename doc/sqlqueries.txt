@@ -1,0 +1,59 @@
+-- Lesende Diagnosebeispiele für Version 0.25.0 / MariaDB 10.x.
+-- Gewünschte Datenbank zuerst auswählen. Alle Zeitstempel sind UTC.
+-- Migrationen stehen separat unter sql/; dieses Dokument verändert keine Daten.
+
+-- Inventarumfang nach Host, Eigentümerjob und Runid.
+SELECT d.hostid, r.jobid, d.runid, COUNT(*) AS directory_count,
+       j.timeend, d.root_path
+FROM directories d
+LEFT JOIN jobsrunid r ON r.runid = d.runid
+LEFT JOIN jobs j ON j.jobid = r.jobid
+GROUP BY d.hostid, r.jobid, d.runid, j.timeend, d.root_path
+ORDER BY directory_count DESC, d.hostid, r.jobid;
+
+-- Gleicher Root-Pfad mit mehreren Eigentümerjobs.
+-- Mehrere Runids desselben Jobs gelten nicht als Konflikt.
+SELECT d.root_path, COUNT(DISTINCT r.jobid) AS job_count,
+       GROUP_CONCAT(DISTINCT r.jobid ORDER BY r.jobid) AS jobids
+FROM directories d
+JOIN jobsrunid r ON r.runid = d.runid
+GROUP BY BINARY d.root_path, d.root_path
+HAVING COUNT(DISTINCT r.jobid) > 1;
+
+-- Aktuelle Jobs einschließlich Spezialtask und Stufe.
+SELECT jobid, hostid, source_jobid, task, status, stage, startdirname,
+       runid, timestart, timeend, last_activity, errmsg
+FROM jobs
+ORDER BY jobid DESC
+LIMIT 40;
+
+-- Arbeitstabellen je registriertem Host.
+SELECT h.hostid, h.machine, h.tabellenname,
+       CASE WHEN t.table_name IS NULL THEN 'FEHLT' ELSE 'vorhanden' END AS work_table
+FROM hosts h
+LEFT JOIN information_schema.tables t
+  ON t.table_schema = DATABASE() AND t.table_name = h.tabellenname
+ORDER BY h.hostid;
+
+-- Offene Änderungsberichte getrennt nach Batch und Host.
+SELECT batch_jobid, hostid, COUNT(*) AS entries,
+       SUM(unreadable) AS unreadable_entries
+FROM tmp_modified
+GROUP BY batch_jobid, hostid
+ORDER BY batch_jobid, hostid;
+
+-- Letzte Scan- und Inhaltsprüfzeiten für markierte oder unlesbare Verzeichnisse.
+SELECT dirid, hostid, path, rescan_from_here, read_failures,
+       time_inode_changed, files_lastwrite, scanned_at, hashed_at
+FROM directories
+WHERE rescan_from_here = TRUE OR read_failures > 0
+ORDER BY hostid, dirid;
+
+-- Vergleichsergebnisse; beide Host-IDs gehören zur Paaridentität.
+SELECT jobid, hostid, hostidB, status, COUNT(*) AS pairs
+FROM tmp_doubles_letchecked
+GROUP BY jobid, hostid, hostidB, status
+ORDER BY jobid DESC, hostid, hostidB, status;
+
+-- Statement-Limit der aktuellen SQL-Sitzung, kein Socket-Timeout.
+SELECT @@GLOBAL.max_statement_time, @@SESSION.max_statement_time;

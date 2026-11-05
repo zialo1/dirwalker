@@ -1,0 +1,1 @@
+./dirwalker.py jobs-insert /volume1/homes/ '@eaDir,.git,#recycle,.TemporaryItems,.git,.backup,.idea,.config,.thumbnails,.cache'

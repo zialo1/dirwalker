@@ -1,0 +1,3 @@
+./filewalker.py dropall
+./filewalker.py init
+./filewalker.py --excluded-dirnames '@eaDir,.git,#recycle,.TemporaryItems,.git,.backup,.idea,.config,.thumbnails,.cache,.venv,__pycache__,.ssh,.local,.DS_store'
